@@ -23,6 +23,7 @@ ganglion.once(k.OBCIEmitterGanglionFound, (peripheral) => {
   let sizeOfBuf = 0;
   ganglion.on('sample', (sample) => {
     /** Work with sample */
+    // console.log(sample.sampleNumber);
     if (sample.sampleNumber === 0) {
       buf.push(droppedPacketCounter);
       sizeOfBuf++;
