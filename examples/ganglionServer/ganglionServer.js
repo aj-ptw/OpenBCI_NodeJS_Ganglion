@@ -2,7 +2,7 @@ const Ganglion = require('../../index').Ganglion;
 const k = require('../../openBCIConstants');
 const verbose = true;
 var ganglion = new Ganglion({
-  debug: true,
+  // debug: true,
   sendCounts: true,
   verbose: verbose
 });
