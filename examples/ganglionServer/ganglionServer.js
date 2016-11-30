@@ -17,13 +17,33 @@ const accel = false;
 ganglion.once(k.OBCIEmitterGanglionFound, (peripheral) => {
   ganglion.searchStop().catch(errorFunc);
 
+  let droppedPacketCounter = 0;
+  let secondCounter = 0;
+  let buf = [];
+  let sizeOfBuf = 0;
   ganglion.on('sample', (sample) => {
     /** Work with sample */
-    console.log(sample.sampleNumber);
+    if (sample.sampleNumber === 0) {
+      buf.push(droppedPacketCounter);
+      sizeOfBuf++;
+      droppedPacketCounter = 0;
+      if (sizeOfBuf >= 60) {
+        var sum = 0;
+        for (let i = 0; i < buf.length; i++) {
+          sum += parseInt(buf[i], 10);
+        }
+        const percentDropped = sum / 6000 * 100;
+        console.log(`dropped packet rate: ${sum} - percent dropped: %${percentDropped.toFixed(2)}`);
+        buf.shift();
+      } else {
+        console.log(`time till average rate starts ${60 - sizeOfBuf}`);
+      }
+    }
   });
 
   ganglion.on('droppedPacket', (data) => {
-    console.log('droppedPacket:', data);
+    // console.log('droppedPacket:', data);
+    droppedPacketCounter++;
   });
 
   ganglion.on('message', (message) => {
