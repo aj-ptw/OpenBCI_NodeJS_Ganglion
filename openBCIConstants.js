@@ -146,9 +146,10 @@ const obciGanglionSamplesPerPacket = 2;
 const obciGanglionPacket = {
   accelStart: 1,
   accelStop: 7,
+  auxByte: 20,
   byteId: 0,
   dataStart: 1,
-  dataStop: 20
+  dataStop: 19
 };
 const obciGanglionMCP3912Gain = 1.0;  // assumed gain setting for MCP3912.  NEEDS TO BE ADJUSTABLE JM
 const obciGanglionMCP3912Vref = 1.2;  // reference voltage for ADC in MCP3912 set in hardware

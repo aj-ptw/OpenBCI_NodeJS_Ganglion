@@ -527,7 +527,7 @@ Ganglion.prototype._buildSample = function (sampleNumber, rawData) {
 
 /**
  * Called to when a compressed packet is received.
- * @param buffer {Buffer} Just the data portion of the sample. So 19 bytes.
+ * @param buffer {Buffer} Just the data portion of the sample. So 18 bytes.
  * @return {Array} - An array of deltas of shape 2x4 (2 samples per packet
  *  and 4 channels per sample.)
  * @private
@@ -547,71 +547,71 @@ Ganglion.prototype._decompressDeltas = function (buffer) {
   // Sample 1 - Channel 1
   miniBuf = new Buffer(
     [
-      (buffer[0] >> 5),
-      ((buffer[0] & 0x1F) << 3) | (buffer[1] >> 5),
-      ((buffer[1] & 0x1F) << 3) | (buffer[2] >> 5)
+      (buffer[0] >> 6),
+      ((buffer[0] & 0x3F) << 2) | (buffer[1] >> 6),
+      ((buffer[1] & 0x3F) << 2) | (buffer[2] >> 6)
     ]
   );
-  receivedDeltas[0][0] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[0][0] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 1 - Channel 2
   miniBuf = new Buffer(
     [
-      (buffer[2] & 0x1F) >> 2,
-      (buffer[2] << 6) | (buffer[3] >> 2),
-      (buffer[3] << 6) | (buffer[4] >> 2)
+      (buffer[2] & 0x3F) >> 4,
+      (buffer[2] << 4) | (buffer[3] >> 4),
+      (buffer[3] << 4) | (buffer[4] >> 4)
     ]);
   // miniBuf = new Buffer([(buffer[2] & 0x1F), buffer[3], buffer[4] >> 2]);
-  receivedDeltas[0][1] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[0][1] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 1 - Channel 3
   miniBuf = new Buffer(
     [
-      ((buffer[4] & 0x03) << 1) | (buffer[5] >> 7),
-      ((buffer[5] & 0x7F) << 1) | (buffer[6] >> 7),
-      ((buffer[6] & 0x7F) << 1) | (buffer[7] >> 7)
+      (buffer[4] & 0x0F) >> 2,
+      (buffer[4] << 6) | (buffer[5] >> 2),
+      (buffer[5] << 6) | (buffer[6] >> 2)
     ]);
-  receivedDeltas[0][2] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[0][2] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 1 - Channel 4
   miniBuf = new Buffer(
     [
-      ((buffer[7] & 0x7F) >> 4),
-      ((buffer[7] & 0x0F) << 4) | (buffer[8] >> 4),
-      ((buffer[8] & 0x0F) << 4) | (buffer[9] >> 4)
+      (buffer[6] & 0x03),
+      buffer[7],
+      buffer[8]
     ]);
-  receivedDeltas[0][3] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[0][3] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 2 - Channel 1
   miniBuf = new Buffer(
     [
-      ((buffer[9] & 0x0F) >> 1),
-      (buffer[9] << 7) | (buffer[10] >> 1),
-      (buffer[10] << 7) | (buffer[11] >> 1)
+      (buffer[9] >> 6),
+      ((buffer[9] & 0x3F) << 2) | (buffer[10] >> 6),
+      ((buffer[10] & 0x3F) << 2) | (buffer[11] >> 6)
     ]);
-  receivedDeltas[1][0] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[1][0] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 2 - Channel 2
   miniBuf = new Buffer(
     [
-      ((buffer[11] & 0x01) << 2) | (buffer[12] >> 6),
-      (buffer[12] << 2) | (buffer[13] >> 6),
-      (buffer[13] << 2) | (buffer[14] >> 6)
+      (buffer[11] & 0x3F) >> 4,
+      (buffer[11] << 4) | (buffer[12] >> 4),
+      (buffer[12] << 4) | (buffer[13] >> 4)
     ]);
-  receivedDeltas[1][1] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[1][1] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 2 - Channel 3
   miniBuf = new Buffer(
     [
-      ((buffer[14] & 0x38) >> 3),
-      ((buffer[14] & 0x07) << 5) | ((buffer[15] & 0xF8) >> 3),
-      ((buffer[15] & 0x07) << 5) | ((buffer[16] & 0xF8) >> 3)
+      (buffer[13] & 0x0F) >> 2,
+      (buffer[13] << 6) | (buffer[14] >> 2),
+      (buffer[14] << 6) | (buffer[15] >> 2)
     ]);
-  receivedDeltas[1][2] = utils.convert19bitAsInt32(miniBuf);
+  receivedDeltas[1][2] = utils.convert18bitAsInt32(miniBuf);
 
   // Sample 2 - Channel 4
-  miniBuf = new Buffer([(buffer[16] & 0x07), buffer[17], buffer[18]]);
-  receivedDeltas[1][3] = utils.convert19bitAsInt32(miniBuf);
+  miniBuf = new Buffer([(buffer[15] & 0x03), buffer[16], buffer[17]]);
+  receivedDeltas[1][3] = utils.convert18bitAsInt32(miniBuf);
 
   return receivedDeltas;
 };

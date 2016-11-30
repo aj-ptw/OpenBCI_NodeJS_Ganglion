@@ -301,7 +301,8 @@ describe('OpenBCIConstants', function () {
     it('packet positions', function () {
       assert.equal(0, k.OBCIGanglionPacket.byteId);
       assert.equal(1, k.OBCIGanglionPacket.dataStart);
-      assert.equal(20, k.OBCIGanglionPacket.dataStop);
+      assert.equal(19, k.OBCIGanglionPacket.dataStop);
+      assert.equal(20, k.OBCIGanglionPacket.auxByte);
     });
   });
   describe('Commands', function () {
