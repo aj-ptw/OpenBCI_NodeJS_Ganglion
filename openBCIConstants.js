@@ -46,6 +46,7 @@ const obciStreamStop = 's';
 /** Miscellaneous */
 const obciMiscQueryRegisterSettings = '?';
 const obciMiscSoftReset = 'v';
+const obciMiscResend = 'o';
 
 /** Possible number of channels */
 const obciNumberOfChannelsGanglion = 4;
@@ -130,7 +131,7 @@ const obciEmitterSynced = 'synced';
 
 /** Ganglion */
 const obciGanglionBleSearchTime = 20000; // ms
-const obciGanglionByteIdRawData = 0;
+const obciGanglionByteIdUncompressed = 0;
 const obciGanglionByteIdSampleMax = 127;
 const obciGanglionByteIdSampleMin = 1;
 const obciGanglionByteIdAccel = 128;
@@ -306,6 +307,7 @@ module.exports = {
   /** Miscellaneous */
   OBCIMiscQueryRegisterSettings: obciMiscQueryRegisterSettings,
   OBCIMiscSoftReset: obciMiscSoftReset,
+  OBCIMiscResend: obciMiscResend,
   /** Possible number of channels */
   OBCINumberOfChannelsGanglion: obciNumberOfChannelsGanglion,
   /** Possible OpenBCI board types */
@@ -381,7 +383,7 @@ module.exports = {
   OBCIEmitterSynced: obciEmitterSynced,
   /** Ganglion */
   OBCIGanglionBleSearchTime: obciGanglionBleSearchTime,
-  OBCIGanglionByteIdRawData: obciGanglionByteIdRawData,
+  OBCIGanglionByteIdUncompressed: obciGanglionByteIdUncompressed,
   OBCIGanglionByteIdSampleMax: obciGanglionByteIdSampleMax,
   OBCIGanglionByteIdSampleMin: obciGanglionByteIdSampleMin,
   OBCIGanglionByteIdAccel: obciGanglionByteIdAccel,
