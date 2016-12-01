@@ -208,7 +208,7 @@ describe('#ganglion', function () {
     });
     it('should try to resend 0 packet and add packet 1 to buffer', function () {
       // Send the last buffer, set's ganglion._packetCounter
-      ganglion._processCompressedData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax));
+      ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax));
       const expectedMissedSample = k.OBCIGanglionByteIdUncompressed;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleCompressedData(expectedMissedSample + 1);
@@ -233,7 +233,7 @@ describe('#ganglion', function () {
 
     });
     it('should try to resend packet 127', function () {
-      ganglion._processCompressedData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 1));
+      ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 1));
       const expectedMissedSample = k.OBCIGanglionByteIdSampleMax;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleUncompressedData();
@@ -243,7 +243,7 @@ describe('#ganglion', function () {
       expect(bufferEqual(ganglion._packetBuffer[0], nextPacket)).to.equal(true);
     });
     it('should try to resend packet 126 and 127', function () {
-      ganglion._processCompressedData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 2));
+      ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 2));
       const expectedMissedSample1 = k.OBCIGanglionByteIdSampleMax - 1;
       const expectedMissedSample2 = k.OBCIGanglionByteIdSampleMax;
       // Call the function under test with one more then expected
@@ -256,7 +256,7 @@ describe('#ganglion', function () {
     });
     it('should try to resend packet 1 and add packet 2 to buffer', function () {
       // Send the last buffer, set's ganglion._packetCounter
-      ganglion._processUncompressedData(utils.sampleUncompressedData());
+      ganglion._processProcessSampleData(utils.sampleUncompressedData());
       const expectedMissedSample = k.OBCIGanglionByteIdUncompressed + 1;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleCompressedData(expectedMissedSample + 1);
@@ -267,7 +267,7 @@ describe('#ganglion', function () {
     });
     it('should try to resend packet 1 & 2 and add packet 3 to buffer', function () {
       // Send the last buffer, set's ganglion._packetCounter
-      ganglion._processUncompressedData(utils.sampleUncompressedData());
+      ganglion._processProcessSampleData(utils.sampleUncompressedData());
       const expectedMissedSample1 = k.OBCIGanglionByteIdUncompressed + 1;
       const expectedMissedSample2 = k.OBCIGanglionByteIdUncompressed + 2;
       // Call the function under test with two more then expected

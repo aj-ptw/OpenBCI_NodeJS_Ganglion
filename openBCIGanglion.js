@@ -107,6 +107,7 @@ function Ganglion (options) {
   this._connected = false;
   this._decompressedSamples = new Array(3);
   this._droppedPacketCounter = 0;
+  this._firstPacket = true;
   this._lastDroppedPacket = null;
   this._lastPacket = null;
   this._localName = null;
@@ -825,7 +826,9 @@ Ganglion.prototype._nobleScanStart = function () {
     });
     // Only look so simblee ble devices and allow duplicates (multiple ganglions)
     // noble.startScanning([k.SimbleeUuidService], true);
-    noble.startScanning([], false);
+    noble.startScanning([], false).catch((err) => {
+      console.log(err);
+    })
   });
 };
 
@@ -1016,6 +1019,7 @@ Ganglion.prototype._resetDroppedPacketSystem = function () {
   this._packetBuffer = [];
   this._requestedPacketResend = [];
   this._packetCounter = -1;
+  this._firstPacket = true;
 };
 
 Ganglion.prototype._droppedPacket = function (droppedPacketNumber) {
@@ -1027,6 +1031,12 @@ Ganglion.prototype._droppedPacket = function (droppedPacketNumber) {
 Ganglion.prototype._processProcessSampleData = function(data) {
   const curByteId = parseInt(data[0]);
   const difByteId = curByteId - this._packetCounter;
+
+  if (this._firstPacket) {
+    this._firstPacket = false;
+    this._processRouteSampleData(data);
+    return;
+  }
 
   if (this._requestedPacketResend.length > 0) {
     let dumped = false;
