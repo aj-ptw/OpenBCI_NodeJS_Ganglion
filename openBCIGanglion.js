@@ -826,9 +826,7 @@ Ganglion.prototype._nobleScanStart = function () {
     });
     // Only look so simblee ble devices and allow duplicates (multiple ganglions)
     // noble.startScanning([k.SimbleeUuidService], true);
-    noble.startScanning([], false).catch((err) => {
-      console.log(err);
-    })
+    noble.startScanning([], false);
   });
 };
 
