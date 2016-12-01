@@ -112,6 +112,7 @@ function Ganglion (options) {
   this._localName = null;
   this._multiPacketBuffer = null;
   this._packetBuffer = [];
+  this._requestedPacketResend = [];
   this._packetCounter = k.OBCIGanglionByteIdSampleMax;
   this._peripheral = null;
   this._scanning = false;
@@ -858,7 +859,7 @@ Ganglion.prototype._processBytes = function (data) {
   this.lastPacket = data;
   let byteId = parseInt(data[0]);
   if (byteId <= k.OBCIGanglionByteIdSampleMax) {
-    this._processProcessData(data);
+    this._processProcessSampleData(data);
   } else {
     switch (byteId) {
       case k.OBCIGanglionByteIdAccel:
@@ -1011,41 +1012,78 @@ Ganglion.prototype._processMultiBytePacketStop = function (data) {
   this.destroyMultiPacketBuffer();
 };
 
-Ganglion.prototype._resetPacketBuffer = function () {
+Ganglion.prototype._resetDroppedPacketSystem = function () {
   this._packetBuffer = [];
+  this._requestedPacketResend = [];
+  this._packetCounter = -1;
 };
 
-Ganglion.prototype._processProcessData = function(data) {
+Ganglion.prototype._droppedPacket = function (droppedPacketNumber) {
+  this.write(new Buffer([k.OBCIMiscResend, droppedPacketNumber]));
+  this.emit(k.OBCIEmitterDroppedPacket, [droppedPacketNumber]);
+  this._requestedPacketResend.push(droppedPacketNumber);
+};
+
+Ganglion.prototype._processProcessSampleData = function(data) {
   const curByteId = parseInt(data[0]);
   const difByteId = curByteId - this._packetCounter;
+
+  if (this._requestedPacketResend.length > 0) {
+    let dumped = false;
+    for (let i = 0; i < this._requestedPacketResend.length; i++) {
+      if (this._requestedPacketResend[i] === curByteId) {
+        dumped = true;
+        const tempCurBytId = this._packetCounter;
+        this._processRouteSampleData(data);
+        this._packetCounter = tempCurBytId;
+        this._requestedPacketResend.splice(i, 1);
+        let bufData = this._packetBuffer.shift();
+        while (bufData) {
+          this._processRouteSampleData(bufData);
+          bufData = this._packetBuffer.shift();
+        }
+        return;
+      }
+    }
+    if (!dumped) {
+      this._packetBuffer.push(data);
+      this._packetCounter = curByteId;
+      return;
+    }
+  }
 
   // Wrap around situation
   if (difByteId < 0) {
     if (this._packetCounter === 127) {
-      const missedPacketByteId = curByteId - 1;
-      this.write(new Buffer([k.OBCIMiscResend, missedPacketByteId]));
+      this._droppedPacket(curByteId - 1);
     } else {
       let tempCounter = this._packetCounter + 1;
       while (tempCounter <= 127) {
-        this.write(new Buffer([k.OBCIMiscResend, tempCounter]));
+        this._droppedPacket(tempCounter);
         tempCounter++;
       }
     }
     this._packetBuffer.push(data);
+    this._packetCounter = curByteId;
   } else if (difByteId > 1) {
     let tempCounter = this._packetCounter + 1;
     while (tempCounter < curByteId) {
-      this.write(new Buffer([k.OBCIMiscResend, tempCounter]));
+      this._droppedPacket(tempCounter);
       tempCounter++;
     }
     this._packetBuffer.push(data);
+    this._packetCounter = curByteId;
   // Dropped packet
   } else {
-    if (curByteId === k.OBCIGanglionByteIdUncompressed) {
-      this._processUncompressedData(data);
-    } else {
-      this._processCompressedData(data);
-    }
+    this._processRouteSampleData(data);
+  }
+};
+
+Ganglion.prototype._processRouteSampleData = function(data) {
+  if (parseInt(data[0]) === k.OBCIGanglionByteIdUncompressed) {
+    this._processUncompressedData(data);
+  } else {
+    this._processCompressedData(data);
   }
 };
 

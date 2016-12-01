@@ -180,14 +180,31 @@ describe('#ganglion', function () {
       ganglion.removeListener('accelerometer', accelDataFunc);
     });
   });
-  describe('#_processPreprocessData', function () {
+  describe('#_processProcessSampleData', function () {
+    let funcSpyCompressedData;
+    let funcSpyUncompressedData;
     let funcSpyWrite;
     before(function () {
       funcSpyWrite = sinon.spy(ganglion, 'write');
+      funcSpyCompressedData = sinon.spy(ganglion, '_processCompressedData');
+      funcSpyUncompressedData = sinon.spy(ganglion, '_processUncompressedData');
     });
     beforeEach(function () {
       funcSpyWrite.reset();
-      ganglion._resetPacketBuffer();
+      funcSpyCompressedData.reset();
+      funcSpyUncompressedData.reset();
+      ganglion._resetDroppedPacketSystem();
+    });
+    it('should call proper functions if no dropped packets', function () {
+      it('should work on uncompressed data', function () {
+        ganglion._processProcessSampleData(utils.sampleUncompressedData());
+        funcSpyUncompressedData.should.have.been.called;
+      });
+
+      it('should work on compressed data', function () {
+        ganglion._processProcessSampleData(utils.sampleCompressedData(1));
+        funcSpyCompressedData.should.have.been.called;
+      });
     });
     it('should try to resend 0 packet and add packet 1 to buffer', function () {
       // Send the last buffer, set's ganglion._packetCounter
@@ -195,21 +212,34 @@ describe('#ganglion', function () {
       const expectedMissedSample = k.OBCIGanglionByteIdUncompressed;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleCompressedData(expectedMissedSample + 1);
-      ganglion._processProcessData(nextPacket);
+      ganglion._processProcessSampleData(nextPacket);
       expect(bufferEqual(funcSpyWrite.firstCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample])))).to.equal(true);
+      expect(ganglion._requestedPacketResend[0]).to.equal(expectedMissedSample);
       expect(bufferEqual(ganglion._packetBuffer[0], nextPacket)).to.equal(true);
 
+      funcSpyCompressedData.reset();
       const nextNextPacket = utils.sampleCompressedData(expectedMissedSample + 2);
-      ganglion._processProcessData(nextNextPacket);
+      ganglion._processProcessSampleData(nextNextPacket);
       expect(bufferEqual(ganglion._packetBuffer[1], nextNextPacket)).to.equal(true);
+      funcSpyCompressedData.should.not.have.been.called;
+
+      const missedPacket = utils.sampleUncompressedData();
+      ganglion._processProcessSampleData(missedPacket);
+      expect(bufferEqual(funcSpyUncompressedData.firstCall.args[0], missedPacket)).to.equal(true);
+      expect(bufferEqual(funcSpyCompressedData.firstCall.args[0], nextPacket)).to.equal(true);
+      expect(bufferEqual(funcSpyCompressedData.secondCall.args[0], nextNextPacket)).to.equal(true);
+      expect(ganglion._packetBuffer).to.deep.equal([]);
+      expect(ganglion._requestedPacketResend).to.deep.equal([]);
+
     });
     it('should try to resend packet 127', function () {
       ganglion._processCompressedData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 1));
       const expectedMissedSample = k.OBCIGanglionByteIdSampleMax;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleUncompressedData();
-      ganglion._processProcessData(nextPacket);
+      ganglion._processProcessSampleData(nextPacket);
       expect(bufferEqual(funcSpyWrite.firstCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample])))).to.equal(true);
+      expect(ganglion._requestedPacketResend[0]).to.equal(expectedMissedSample);
       expect(bufferEqual(ganglion._packetBuffer[0], nextPacket)).to.equal(true);
     });
     it('should try to resend packet 126 and 127', function () {
@@ -218,9 +248,10 @@ describe('#ganglion', function () {
       const expectedMissedSample2 = k.OBCIGanglionByteIdSampleMax;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleUncompressedData();
-      ganglion._processProcessData(nextPacket);
+      ganglion._processProcessSampleData(nextPacket);
       expect(bufferEqual(funcSpyWrite.firstCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample1])))).to.equal(true);
       expect(bufferEqual(funcSpyWrite.secondCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample2])))).to.equal(true);
+      expect(ganglion._requestedPacketResend).to.deep.equal([expectedMissedSample1, expectedMissedSample2]);
       expect(bufferEqual(ganglion._packetBuffer[0], nextPacket)).to.equal(true);
     });
     it('should try to resend packet 1 and add packet 2 to buffer', function () {
@@ -229,8 +260,9 @@ describe('#ganglion', function () {
       const expectedMissedSample = k.OBCIGanglionByteIdUncompressed + 1;
       // Call the function under test with one more then expected
       const nextPacket = utils.sampleCompressedData(expectedMissedSample + 1);
-      ganglion._processProcessData(nextPacket);
+      ganglion._processProcessSampleData(nextPacket);
       expect(bufferEqual(funcSpyWrite.firstCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample])))).to.equal(true);
+      expect(ganglion._requestedPacketResend[0]).to.equal(expectedMissedSample);
       expect(bufferEqual(ganglion._packetBuffer[0], nextPacket)).to.equal(true);
     });
     it('should try to resend packet 1 & 2 and add packet 3 to buffer', function () {
@@ -240,9 +272,10 @@ describe('#ganglion', function () {
       const expectedMissedSample2 = k.OBCIGanglionByteIdUncompressed + 2;
       // Call the function under test with two more then expected
       const nextPacket = utils.sampleCompressedData(expectedMissedSample2 + 1);
-      ganglion._processProcessData(nextPacket);
+      ganglion._processProcessSampleData(nextPacket);
       expect(bufferEqual(funcSpyWrite.firstCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample1])))).to.equal(true);
       expect(bufferEqual(funcSpyWrite.secondCall.args[0], (new Buffer([k.OBCIMiscResend, expectedMissedSample2])))).to.equal(true);
+      expect(ganglion._requestedPacketResend).to.deep.equal([expectedMissedSample1, expectedMissedSample2]);
       expect(bufferEqual(ganglion._packetBuffer[0], nextPacket)).to.equal(true);
     });
   });
@@ -261,7 +294,7 @@ describe('#ganglion', function () {
       funcSpyMultiBytePacket = sinon.spy(ganglion, '_processMultiBytePacket');
       funcSpyMultiBytePacketStop = sinon.spy(ganglion, '_processMultiBytePacketStop');
       funcSpyOtherData = sinon.spy(ganglion, '_processOtherData');
-      funcSpyProcessedData = sinon.spy(ganglion, '_processProcessData');
+      funcSpyProcessedData = sinon.spy(ganglion, '_processProcessSampleData');
     });
     beforeEach(function () {
       funcSpyAccel.reset();
