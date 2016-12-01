@@ -232,6 +232,18 @@ describe('#ganglion', function () {
       expect(ganglion._requestedPacketResend).to.deep.equal([]);
 
     });
+    it('should not find a dropped packet on wrap around', function () {
+      ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 1));
+      funcSpyCompressedData.should.have.been.calledOnce;
+      ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax));
+      funcSpyCompressedData.should.have.been.calledTwice;
+      ganglion._processProcessSampleData(utils.sampleUncompressedData());
+      funcSpyCompressedData.should.have.been.calledTwice;
+      funcSpyUncompressedData.should.have.been.calledOnce;
+      ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdUncompressed + 1));
+      funcSpyCompressedData.should.have.been.calledThrice;
+      funcSpyWrite.should.not.have.been.called;
+    });
     it('should try to resend packet 127', function () {
       ganglion._processProcessSampleData(utils.sampleCompressedData(k.OBCIGanglionByteIdSampleMax - 1));
       const expectedMissedSample = k.OBCIGanglionByteIdSampleMax;

@@ -1065,7 +1065,11 @@ Ganglion.prototype._processProcessSampleData = function(data) {
   // Wrap around situation
   if (difByteId < 0) {
     if (this._packetCounter === 127) {
-      this._droppedPacket(curByteId - 1);
+      if (curByteId === 0) {
+        this._processRouteSampleData(data);
+      } else {
+        this._droppedPacket(curByteId - 1);
+      }
     } else {
       let tempCounter = this._packetCounter + 1;
       while (tempCounter <= 127) {
