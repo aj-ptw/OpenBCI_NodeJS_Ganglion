@@ -1,6 +1,6 @@
 # 0.2.0
 
-### New Features
+### Work In Progress
 * Packet resend functionality added
 
 ### Enhancements

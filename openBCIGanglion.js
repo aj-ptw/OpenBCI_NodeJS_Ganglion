@@ -1021,9 +1021,9 @@ Ganglion.prototype._resetDroppedPacketSystem = function () {
 };
 
 Ganglion.prototype._droppedPacket = function (droppedPacketNumber) {
-  this.write(new Buffer([k.OBCIMiscResend, droppedPacketNumber]));
+  // this.write(new Buffer([k.OBCIMiscResend, droppedPacketNumber]));
   this.emit(k.OBCIEmitterDroppedPacket, [droppedPacketNumber]);
-  this._requestedPacketResend.push(droppedPacketNumber);
+  // this._requestedPacketResend.push(droppedPacketNumber);
 };
 
 Ganglion.prototype._processProcessSampleData = function(data) {
