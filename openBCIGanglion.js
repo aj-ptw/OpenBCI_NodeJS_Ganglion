@@ -904,25 +904,6 @@ Ganglion.prototype._processAccel = function (data) {
  * @private
  */
 Ganglion.prototype._processCompressedData = function (data) {
-  // check for dropped packet
-  // if (parseInt(data[0]) - this._packetCounter !== 1) {
-  //   this.lastDroppedPacket = parseInt(data[0]); // - 2;
-  //   // var retryString = "&"+dropped;
-  //   // var reset = Buffer.from(retryString);
-  //   // _sendCharacteristic.write(reset);
-  //   this._droppedPacketCounter++;
-  //   this.emit(k.OBCIEmitterDroppedPacket, [parseInt(data[0]) - 1]);
-  //   // if (this.options.verbose) console.error('\t>>>PACKET DROP<<<  ' + this._packetCounter + '  ' + this.lastDroppedPacket + ' ' + this._droppedPacketCounter);
-  // }
-
-  // let buffer = data.slice(k.OBCIGanglionPacket.dataStart, k.OBCIGanglionPacket.dataStop);
-  //
-  // if (k.getVersionNumber(process.version) >= 6) {
-  //   // From introduced in node version 6.x.x
-  //   buffer = Buffer.from(buffer);
-  // } else {
-  //   buffer = new Buffer(buffer);
-  // }
 
   // Decompress the buffer into array
   this._decompressSamples(this._decompressDeltas(data.slice(k.OBCIGanglionPacket.dataStart, k.OBCIGanglionPacket.dataStop)));
@@ -1018,12 +999,14 @@ Ganglion.prototype._resetDroppedPacketSystem = function () {
   this._requestedPacketResend = [];
   this._packetCounter = -1;
   this._firstPacket = true;
+  this._droppedPacketCounter = 0;
 };
 
 Ganglion.prototype._droppedPacket = function (droppedPacketNumber) {
-  // this.write(new Buffer([k.OBCIMiscResend, droppedPacketNumber]));
+  this.write(new Buffer([k.OBCIMiscResend, droppedPacketNumber]));
   this.emit(k.OBCIEmitterDroppedPacket, [droppedPacketNumber]);
-  // this._requestedPacketResend.push(droppedPacketNumber);
+  this._droppedPacketCounter++;
+  this._requestedPacketResend.push(droppedPacketNumber);
 };
 
 Ganglion.prototype._processProcessSampleData = function(data) {
