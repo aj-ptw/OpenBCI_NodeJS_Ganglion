@@ -1,7 +1,9 @@
-# 0.2.0
+# 0.2.1
 
 ### Work In Progress
 * Packet resend functionality added
+
+# 0.2.0
 
 ### Enhancements
 * Compress with 18bits vs 19bits
