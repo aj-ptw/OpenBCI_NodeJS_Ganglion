@@ -44,7 +44,7 @@ ganglion.once(k.OBCIEmitterGanglionFound, (peripheral) => {
 
 
   ganglion.once('ready', () => {
-    // ganglion.channelOff(4).catch(errorFunc);
+    ganglion.channelOff(4).catch(errorFunc);
     ganglion.streamStart().catch(errorFunc);
     console.log('ready');
   });
