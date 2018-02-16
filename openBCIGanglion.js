@@ -142,6 +142,10 @@ function Ganglion (options, callback) {
   this._streaming = false;
 
   /** Public Properties (keep alphabetical) */
+  this.info = {
+    firmware: 'v0.0.1',
+    missedPackets: 0
+  };
   this.peripheralArray = [];
   this.ganglionPeripheralArray = [];
   this.previousPeripheralArray = [];
@@ -656,17 +660,39 @@ Ganglion.prototype._nobleConnect = function (peripheral) {
     });
 
     this._peripheral.on(k.OBCINobleEmitterPeripheralServicesDiscover, (services) => {
+      let infoService = false;
       for (let i = 0; i < services.length; i++) {
         if (services[i].uuid === k.SimbleeUuidService) {
           this._rfduinoService = services[i];
           // if (this.options.verbose) console.log("Found simblee Service");
-          break;
+        } else if (services[i].uuid === '180a') {
+          infoService = services[i];
         }
       }
 
       if (!this._rfduinoService) {
         reject('Couldn\'t find the simblee service.');
       }
+
+      if (!infoService) {
+        reject('Couldn\'t find the info service.');
+      }
+
+      infoService.once(k.OBCINobleEmitterServiceCharacteristicsDiscover, (characteristics) => {
+        if (this.options.verbose) console.log('Discovered ' + characteristics.length + ' service characteristics');
+        for (let i = 0; i < characteristics.length; i++) {
+          // console.log(characteristics[i].uuid);
+          if (characteristics[i].uuid === '2a28') {
+            if (this.options.verbose) console.log('Found software version characteristic');
+            characteristics[i].read((error, data) => {
+              this.info.firmware = obciUtils.getFirmware(data);
+              if (this.options.verbose) console.log('Firmware version of Ganglion is:', this.info.firmware);
+            });
+          }
+        }
+      });
+
+      infoService.discoverCharacteristics();
 
       this._rfduinoService.once(k.OBCINobleEmitterServiceCharacteristicsDiscover, (characteristics) => {
         if (this.options.verbose) console.log('Discovered ' + characteristics.length + ' service characteristics');
